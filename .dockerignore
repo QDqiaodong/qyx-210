@@ -1,0 +1,12 @@
+target/
+node_modules/
+dist/
+.git/
+.DS_Store
+.env
+*.local
+.idea/
+.vscode/
+.mvn/wrapper/
+npm-debug.log
+yarn-error.log

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: seat-stats-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect='SET NAMES utf8mb4'
+    ports:
+      - "127.0.0.1:${LOCAL_DB_PORT}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7
+    container_name: seat-stats-redis
+    ports:
+      - "127.0.0.1:${LOCAL_REDIS_PORT}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: seat-stats-backend
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:${SERVER_PORT}:${SERVER_PORT}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: seat-stats-frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:
