@@ -62,6 +62,9 @@ public class SeatService {
 
         if (dto.getRouteId() != null) {
             Route route = routeService.findEntityById(dto.getRouteId());
+            if (!"ACTIVE".equals(route.getStatus())) {
+                throw new BusinessException(400, "该航线已停运，不能再往其上挂载座椅；请先复航");
+            }
             seat.setRoute(route);
         }
 
@@ -113,6 +116,9 @@ public class SeatService {
                 .orElseThrow(() -> new BusinessException(404, "座椅不存在"));
 
         Route newRoute = routeService.findEntityById(routeId);
+        if (!"ACTIVE".equals(newRoute.getStatus())) {
+            throw new BusinessException(400, "该航线已停运，不能再往其上挂载座椅；请先复航");
+        }
 
         String oldRouteCode = seat.getRoute() != null ? seat.getRoute().getRouteCode() : null;
         String oldRouteName = seat.getRoute() != null ? seat.getRoute().getRouteName() : null;

@@ -69,13 +69,38 @@ export interface ChangeRecord {
   seatId: number
   seatCode: string
   changeType: string
+  suspendBatchNo?: string | null
   oldRouteCode: string | null
   oldRouteName: string | null
   newRouteCode: string | null
   newRouteName: string | null
   changeReason: string | null
   operator: string
+  changeTime?: string | null
   remark: string | null
+}
+
+export interface SuspensionBatch {
+  batchNo: string
+  oldRouteCode: string | null
+  oldRouteName: string | null
+  operator: string
+  changeReason: string | null
+  changeTime: string
+  seatCount: number
+}
+
+export interface RouteSuspension {
+  routeId: number
+  routeCode: string
+  routeName: string
+  status: string
+  batchNo: string
+  seatCount: number
+  operator: string
+  reason: string
+  suspendedAt: string
+  items: ChangeRecord[]
 }
 
 export interface Summary {
@@ -88,7 +113,15 @@ export const routeApi = {
   getById: (id: number) => api.get<Route>(`/routes/${id}`),
   create: (data: Omit<Route, 'id'>) => api.post<Route>('/routes', data),
   update: (id: number, data: Partial<Route>) => api.put<Route>(`/routes/${id}`, data),
-  delete: (id: number) => api.delete<void>(`/routes/${id}`)
+  delete: (id: number) => api.delete<void>(`/routes/${id}`),
+  /** 封航停运：原子拆下全部挂载座椅并生成本次封航挂载清单 */
+  suspend: (id: number, data: { operator?: string; reason?: string }) =>
+    api.post<RouteSuspension>(`/routes/${id}/suspend`, data),
+  /** 历次封航批次一览 */
+  suspensionBatches: () => api.get<SuspensionBatch[]>('/routes/suspensions/batches'),
+  /** 按批次号查停运当时的挂载清单（复航逐把核对用） */
+  suspensionManifest: (batchNo: string) =>
+    api.get<ChangeRecord[]>(`/routes/suspensions/${encodeURIComponent(batchNo)}/manifest`)
 }
 
 export const seatApi = {

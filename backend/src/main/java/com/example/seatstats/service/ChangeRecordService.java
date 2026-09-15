@@ -58,12 +58,14 @@ public class ChangeRecordService {
         dto.setSeatId(record.getSeat().getId());
         dto.setSeatCode(record.getSeat().getSeatCode());
         dto.setChangeType(record.getChangeType());
+        dto.setSuspendBatchNo(record.getSuspendBatchNo());
         dto.setOldRouteCode(record.getOldRouteCode());
         dto.setOldRouteName(record.getOldRouteName());
         dto.setNewRouteCode(record.getNewRouteCode());
         dto.setNewRouteName(record.getNewRouteName());
         dto.setChangeReason(record.getChangeReason());
         dto.setOperator(record.getOperator());
+        dto.setChangeTime(record.getChangeTime());
         dto.setRemark(record.getRemark());
         return dto;
     }

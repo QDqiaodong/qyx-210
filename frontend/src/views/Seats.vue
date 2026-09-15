@@ -54,7 +54,13 @@
         </el-form-item>
         <el-form-item label="所属航线">
           <el-select v-model="form.routeId" placeholder="请选择航线">
-            <el-option v-for="route in routes" :key="route.id" :label="route.routeName" :value="route.id" />
+            <el-option
+              v-for="route in routes"
+              :key="route.id"
+              :label="route.status === 'ACTIVE' ? route.routeName : route.routeName + '（已停运）'"
+              :value="route.id"
+              :disabled="route.status !== 'ACTIVE'"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
@@ -77,7 +83,13 @@
       <el-form :model="bindForm" label-width="100px">
         <el-form-item label="目标航线" required>
           <el-select v-model="bindForm.routeId" placeholder="请选择航线">
-            <el-option v-for="route in routes" :key="route.id" :label="route.routeName" :value="route.id" />
+            <el-option
+              v-for="route in routes"
+              :key="route.id"
+              :label="route.status === 'ACTIVE' ? route.routeName : route.routeName + '（已停运）'"
+              :value="route.id"
+              :disabled="route.status !== 'ACTIVE'"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="操作人">

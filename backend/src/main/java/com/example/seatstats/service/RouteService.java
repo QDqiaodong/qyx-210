@@ -62,13 +62,16 @@ public class RouteService {
             throw new BusinessException(400, "航线编码已存在");
         }
 
+        // 运营状态不允许通过普通编辑直接改写：停运必须走封航流程（同事务拆绑座椅+留封航清单），
+        // 否则会出现“状态变了椅子还挂着”或“配套数清零却没有清单”的不一致。
+        if (dto.getStatus() != null && !dto.getStatus().equals(route.getStatus())) {
+            throw new BusinessException(400, "运营状态不能直接编辑；临时封航请使用“封航停运”操作");
+        }
+
         route.setRouteCode(dto.getRouteCode());
         route.setRouteName(dto.getRouteName());
         route.setStartPort(dto.getStartPort());
         route.setEndPort(dto.getEndPort());
-        if (dto.getStatus() != null) {
-            route.setStatus(dto.getStatus());
-        }
         route.setRemark(dto.getRemark());
 
         Route updatedRoute = routeRepository.save(route);

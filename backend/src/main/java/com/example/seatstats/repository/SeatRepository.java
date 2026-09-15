@@ -28,6 +28,13 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
     @Query("SELECT s FROM Seat s LEFT JOIN FETCH s.route WHERE s.route.id = :routeId")
     List<Seat> findByRouteIdWithRoute(@Param("routeId") Long routeId);
 
+    /**
+     * 封航拆绑用：取当时所有还挂在该航线上的椅子（含其航线关联），
+     * 不限座椅自身状态，确保一把不漏、看板配套数彻底归零。
+     */
+    @Query("SELECT s FROM Seat s JOIN FETCH s.route WHERE s.route.id = :routeId")
+    List<Seat> findAllBoundByRouteId(@Param("routeId") Long routeId);
+
     @Query("SELECT COUNT(s) FROM Seat s WHERE s.route.id = :routeId AND s.status = 'IN_USE'")
     Long countByRouteId(@Param("routeId") Long routeId);
 

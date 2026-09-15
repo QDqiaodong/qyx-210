@@ -1,0 +1,33 @@
+server:
+  port: 0
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:seat_stats;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # 测试环境不依赖 Redis：缓存层直接关闭，封航的事务/台账语义与缓存无关
+  cache:
+    type: none
+
+  data:
+    redis:
+      host: localhost
+      # 连不上 Redis 不影响事务语义测试；封航流程不直接依赖 Redis
+      port: 6429
+
+logging:
+  level:
+    com.example.seatstats: INFO
+    org.hibernate.SQL: WARN

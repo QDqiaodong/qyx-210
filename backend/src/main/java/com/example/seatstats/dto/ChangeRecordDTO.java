@@ -21,6 +21,9 @@ public class ChangeRecordDTO {
     @NotBlank(message = "变更类型不能为空")
     private String changeType;
 
+    /** 封航批次号，同一次封航拆下的椅子共享，复航时据此整批核对 */
+    private String suspendBatchNo;
+
     private String oldRouteCode;
 
     private String oldRouteName;
@@ -33,6 +36,8 @@ public class ChangeRecordDTO {
 
     @NotBlank(message = "操作人不能为空")
     private String operator;
+
+    private java.time.LocalDateTime changeTime;
 
     private String remark;
 }
