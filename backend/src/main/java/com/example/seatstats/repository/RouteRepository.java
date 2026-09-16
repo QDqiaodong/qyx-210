@@ -23,6 +23,9 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
     /**
      * 行级悲观锁：封航事务内先锁住航线行，避免两次封航并发执行导致
      * 台账批次错乱或部分解绑的中间态。
+     *
+     * <p>救生衣清点与排班同样按航线串行：两人同时交清点时，后到者在这把锁上等待，
+     * 拿到锁后版本已过期被拒绝；新排班次也在持锁状态下核对是否短缺。</p>
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM Route r WHERE r.id = :id")

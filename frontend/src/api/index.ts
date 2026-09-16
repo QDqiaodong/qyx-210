@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance } from 'axios'
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 
 interface ApiResponse<T> {
   code: number
@@ -15,7 +15,11 @@ instance.interceptors.response.use(
   (response) => {
     const res = response.data as ApiResponse<any>
     if (res.code !== 200) {
-      throw new Error(res.message || '请求失败')
+      // 业务失败（如救生衣短缺禁止排班 409、清点版本冲突 409、保存失败 500）：
+      // 带上后端 code 与 message，调用处据此区分“并发冲突请刷新”等提示。
+      const err = new Error(res.message || '请求失败') as Error & { code?: number }
+      err.code = res.code
+      throw err
     }
     return res.data
   },
@@ -25,10 +29,10 @@ instance.interceptors.response.use(
 )
 
 const api = instance as Omit<AxiosInstance, 'get' | 'post' | 'put' | 'delete'> & {
-  get<T>(url: string): Promise<T>
-  post<T>(url: string, data?: any): Promise<T>
-  put<T>(url: string, data?: any): Promise<T>
-  delete<T>(url: string): Promise<T>
+  get<T>(url: string, config?: AxiosRequestConfig): Promise<T>
+  post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>
+  put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>
+  delete<T>(url: string, config?: AxiosRequestConfig): Promise<T>
 }
 
 export interface Route {
@@ -108,6 +112,56 @@ export interface Summary {
   totalRoutes: number
 }
 
+/** 按航线的救生衣清点结果（未清点航线额定/实点/清点人为 null） */
+export interface JacketCount {
+  id: number | null
+  routeId: number
+  routeCode: string
+  routeName: string
+  requiredCount: number | null
+  actualCount: number | null
+  counter: string | null
+  shortage: boolean
+  shortageCount: number
+  /** 乐观锁版本，再次提交时原样带回；首次清点为 null */
+  version: number | null
+  countTime?: string | null
+  remark?: string | null
+}
+
+export interface JacketCountSubmit {
+  requiredCount: number
+  actualCount: number
+  counter: string
+  expectedVersion: number | null
+  remark?: string
+}
+
+/** 班次（排班） */
+export interface Voyage {
+  id: number
+  voyageCode: string
+  routeId: number
+  routeCode: string
+  routeName: string
+  departureTime: string
+  vesselName?: string | null
+  /** NORMAL 正常 / JACKET_SHORT 缺衣待补 */
+  status: string
+  remark?: string | null
+  createdAt?: string | null
+  /** 请求时点是否已开航（开航时刻已过） */
+  departed: boolean
+}
+
+export interface VoyageCreate {
+  voyageCode?: string
+  routeId: number
+  departureTime: string
+  vesselName?: string
+  remark?: string
+}
+
 export const routeApi = {
   getAll: () => api.get<Route[]>('/routes'),
   getById: (id: number) => api.get<Route>(`/routes/${id}`),
@@ -150,4 +204,27 @@ export const recordApi = {
   getBySeat: (seatId: number) => api.get<ChangeRecord[]>(`/records/seat/${seatId}`),
   getByType: (changeType: string) => api.get<ChangeRecord[]>(`/records/type/${changeType}`),
   delete: (id: number) => api.delete<void>(`/records/${id}`)
+}
+
+/** 救生衣按航线清点 */
+export const jacketCountApi = {
+  /** 清点一览：每条航线的额定件数、实点件数、清点人（未清点航线也返回） */
+  getAll: () => api.get<JacketCount[]>('/jacket-counts'),
+  getByRoute: (routeId: number) => api.get<JacketCount | null>(`/jacket-counts/route/${routeId}`),
+  /**
+   * 提交清点（首次 version 传 null）。保存与班次标记同一事务，
+   * 并发只留先写完者，后端返回 code=409 时需提示刷新后重试。
+   */
+  submit: (routeId: number, data: JacketCountSubmit) =>
+    api.put<JacketCount>(`/jacket-counts/route/${routeId}`, data)
+}
+
+/** 排班（班次） */
+export const voyageApi = {
+  /** 排班页：全部班次按开航时刻升序；可按航线过滤 */
+  getAll: (routeId?: number) =>
+    api.get<Voyage[]>('/voyages', routeId == null ? undefined : { params: { routeId } }),
+  /** 新排班次；航线救生衣短缺时后端拒绝（code=409），不是只写个短缺数字还放行 */
+  create: (data: VoyageCreate) => api.post<Voyage>('/voyages', data),
+  delete: (id: number) => api.delete<void>(`/voyages/${id}`)
 }

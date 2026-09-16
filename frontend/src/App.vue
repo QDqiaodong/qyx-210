@@ -2,7 +2,7 @@
   <el-container class="app-container">
     <el-aside width="200px" class="aside">
       <div class="logo">
-        <h2>座椅航线统计系统</h2>
+        <h2>码头航线调度系统</h2>
       </div>
       <el-menu :default-active="activeMenu" class="menu" @select="handleMenuSelect">
         <el-menu-item index="/dashboard">
@@ -12,6 +12,14 @@
         <el-menu-item index="/routes">
           <el-icon><Ship /></el-icon>
           <span>航线管理</span>
+        </el-menu-item>
+        <el-menu-item index="/jacket-counts">
+          <el-icon><Box /></el-icon>
+          <span>救生衣清点</span>
+        </el-menu-item>
+        <el-menu-item index="/voyages">
+          <el-icon><Calendar /></el-icon>
+          <span>班次排班</span>
         </el-menu-item>
         <el-menu-item index="/seats">
           <el-icon><Grid /></el-icon>
@@ -37,13 +45,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { PieChart, Ship, Grid, Document } from '@element-plus/icons-vue'
+import { PieChart, Ship, Grid, Document, Box, Calendar } from '@element-plus/icons-vue'
 
 const route = useRoute()
 
 const menuTitleMap: Record<string, string> = {
   '/dashboard': '航线资产统计看板',
   '/routes': '通航航线管理',
+  '/jacket-counts': '救生衣按航线清点',
+  '/voyages': '班次排班',
   '/seats': '候船座椅管理',
   '/records': '变更台账'
 }

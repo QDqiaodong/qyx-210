@@ -17,6 +17,16 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/Routes.vue')
   },
   {
+    path: '/jacket-counts',
+    name: 'JacketCounts',
+    component: () => import('../views/JacketCounts.vue')
+  },
+  {
+    path: '/voyages',
+    name: 'Voyages',
+    component: () => import('../views/Voyages.vue')
+  },
+  {
     path: '/seats',
     name: 'Seats',
     component: () => import('../views/Seats.vue')
